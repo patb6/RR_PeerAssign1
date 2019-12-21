@@ -1,0 +1,130 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+---
+## Setting up Environment
+This short section included libraries used in the analysis and creates a function  
+used later in the analysis. I have hidden the library loading messages.
+```{r Environment, warning=FALSE, message=FALSE}
+# Libraries used in this project
+library(readr)
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+# Function to convert interval into elapsed minutes
+elapsedmin <- function(x){
+  e <- ifelse(nchar(x)<=2,paste('00:',x, sep = ""), 
+              paste(substr(x,1,nchar(x)-2),":",substr(x, nchar(x)-1, nchar(x)), sep = ""))
+  e
+}
+```
+
+## Loading and preprocessing the data
+Load activity data
+Preprocess the data frame by adding a variable that identifies weekdays and week ends (used later).  
+Also, format the interval data so it can the string value can be later be converted to elapsed time.
+```{r Read Data and preprocess, message=FALSE}
+# 
+d_activity <- read_csv("activity.zip", col_names = TRUE, na = c("NA"))
+weekdays1 <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
+d_activity$wday <- c('weekend', 'weekday')[(weekdays(d_activity$date) %in% weekdays1)+1L]
+d_activity$hhmm <- ifelse(nchar(d_activity$interval)<4,paste0(0,d_activity$interval),d_activity$interval)
+```
+
+
+## What is mean total number of steps taken per day?
+
+* Aggregate the daily actiity (total steps / day)  
+* Calculate central tendency (median & mean)
+* Provide a Histograme of total steps/day
+
+```{r Histogram of the total number of steps taken each day}
+
+a_stepsdays <- aggregate(d_activity$steps, by = list(d_activity$date, d_activity$wday), FUN = sum)
+colnames(a_stepsdays) <- c("date", "day", "tsteps")
+# Central Tendency
+summary(a_stepsdays$tsteps)[3:4]
+
+# Histogram of the total number of steps taken each day ##### 
+
+hist(a_stepsdays$tsteps,
+     main = "Histogram of Total Steps/Day",
+     xlab = "Total Steps/Day"
+     )
+```
+
+
+
+## What is the average daily activity pattern?
+
+Following plot show daily acitivity averaged over all days (weekdays and weekends).  
+Data is steps are averaged over intervals.
+
+```{r Average daily activity}
+d_stepsByIntveral <- d_activity %>% group_by(interval) %>% summarize(avgSteps = mean(steps, na.rm = TRUE))
+# Create an x-axis based on elapsed minutes of a day (1435 minutes)
+d_stepsByIntveral$telapsed <- hm(elapsedmin(d_stepsByIntveral$interval))
+d_stepsByIntveral$elapsed <- hour(d_stepsByIntveral$telapsed)*60 + minute(d_stepsByIntveral$telapsed)
+
+plot(d_stepsByIntveral$elapsed, d_stepsByIntveral$avgSteps, type = "l",
+     xlab = "Elapsed Minutes",
+     ylab = "Average Steps",
+     main = "Timeseries of Averages Steps Over the Day")
+```
+
+
+
+## Imputing missing values
+Code to describe and show a strategy for imputing missing data
+The next section will show there is not much of a pattern difference between weekday and weekend activities.  Strategy for missing data:  
+* Used the entire data median of the data for the 1st day.  
+* Used the median of the day before & day after for the other missing data.  
+
+```{r Imputing missing data }
+#Determine index of missing data
+i_missing <- which(is.na(a_stepsdays$tsteps))
+print("List of missing dates:")
+a_stepsdays[i_missing,"date"]
+
+e_stepsdays <- a_stepsdays
+# Rules
+# First day is missing - use median of population
+# 
+for(i in i_missing){
+  ifelse(i==1, e_stepsdays[i,3] <- median(e_stepsdays$tsteps, na.rm = TRUE),
+        e_stepsdays[i,3] <- 
+          mean(e_stepsdays[(i-1) : (i+1),3], na.rm = TRUE))
+}
+
+print("Imputed central tendency")
+summary(e_stepsdays$tsteps)[3:4]
+print("Central tendency - missing data")
+summary(a_stepsdays$tsteps)[3:4]
+
+```
+
+
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+```{r Weekday or Weekend activity patterns}
+d_weekdayInterval <- filter(d_activity, d_activity$wday == "weekday") %>% 
+  group_by(interval) %>% summarize(avgSteps = mean(steps, na.rm = TRUE))
+d_weekdayInterval$wday <- "weekday"
+d_weekendInterval <- filter(d_activity, d_activity$wday == "weekend") %>% 
+  group_by(interval) %>% summarize(avgSteps = mean(steps, na.rm = TRUE))
+d_weekendInterval$wday <- "weekend"
+
+g <- ggplot() + geom_line(data = d_weekdayInterval, aes(x = interval, y = avgSteps, color = "Weekday")) +
+     geom_line(data = d_weekendInterval, aes(x = interval, y = avgSteps, color = "Weekend")) + 
+     facet_grid(wday ~ ., scale = "free_y") + theme_bw() +
+     labs(x = "Interal (5-minute interval)", y = "Ave Steps",
+       title = "Average Steps Taken across weekdays and weekends", 
+       subtitle = "OBS: Activity appears to increase on the weekend") + 
+     theme(legend.position = "none")
+print(g)
+
+```
+

@@ -98,8 +98,8 @@ structure of the data.
 ```{r Imputing missing data }
 #Determine index of missing data
 i_missing <- which(is.na(a_stepsdays$tsteps))
-print(paste("Number of missing days:", nrow(i_missing)))
-print("List of missing dates:")
+print(paste("Number of missing days:", length((i_missing))))
+print("List of missing dates: ")
 a_stepsdays[i_missing,"date"]
 
 e_stepsdays <- a_stepsdays

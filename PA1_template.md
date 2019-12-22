@@ -113,19 +113,19 @@ structure of the data.
 ```r
 #Determine index of missing data
 i_missing <- which(is.na(a_stepsdays$tsteps))
-print(paste("Number of missing days:", nrow(i_missing)))
+print(paste("Number of missing days:", length((i_missing))))
 ```
 
 ```
-## [1] "Number of missing days: "
+## [1] "Number of missing days: 8"
 ```
 
 ```r
-print("List of missing dates:")
+print("List of missing dates: ")
 ```
 
 ```
-## [1] "List of missing dates:"
+## [1] "List of missing dates: "
 ```
 
 ```r

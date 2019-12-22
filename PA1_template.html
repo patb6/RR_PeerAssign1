@@ -440,10 +440,10 @@ plot(d_stepsByIntveral$elapsed, d_stepsByIntveral$avgSteps, type = &quot;l&quot;
 structure of the data.</p>
 <pre class="r"><code>#Determine index of missing data
 i_missing &lt;- which(is.na(a_stepsdays$tsteps))
-print(paste(&quot;Number of missing days:&quot;, nrow(i_missing)))</code></pre>
-<pre><code>## [1] &quot;Number of missing days: &quot;</code></pre>
-<pre class="r"><code>print(&quot;List of missing dates:&quot;)</code></pre>
-<pre><code>## [1] &quot;List of missing dates:&quot;</code></pre>
+print(paste(&quot;Number of missing days:&quot;, length((i_missing))))</code></pre>
+<pre><code>## [1] &quot;Number of missing days: 8&quot;</code></pre>
+<pre class="r"><code>print(&quot;List of missing dates: &quot;)</code></pre>
+<pre><code>## [1] &quot;List of missing dates: &quot;</code></pre>
 <pre class="r"><code>a_stepsdays[i_missing,&quot;date&quot;]</code></pre>
 <pre><code>## [1] &quot;2012-10-01&quot; &quot;2012-10-08&quot; &quot;2012-11-01&quot; &quot;2012-11-09&quot; &quot;2012-11-14&quot;
 ## [6] &quot;2012-11-30&quot; &quot;2012-11-04&quot; &quot;2012-11-10&quot;</code></pre>

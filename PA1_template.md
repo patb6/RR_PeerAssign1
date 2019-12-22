@@ -7,7 +7,8 @@ output:
 ## Setting up Environment
 This short section included libraries used in the analysis and creates a function  
 used later in the analysis. I have hidden the library loading messages.
-```{r Environment, warning=FALSE, message=FALSE}
+
+```r
 # Libraries used in this project
 library(readr)
 library(lubridate)
@@ -29,7 +30,8 @@ preprocessing steps:
 * Add a variable that identifies dates as weekdays and weekends (used later).  
 * Format interval string data into hhmm and use hm() later to convert the string into elapsed time.  
 
-```{r Read Data and preprocess, message=FALSE}
+
+```r
 # 
 d_activity <- read_csv("activity.zip", col_names = TRUE, na = c("NA"))
 weekdays1 <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
@@ -44,13 +46,20 @@ Create a dataframe with columns date, day (weekend/weekday), tsteps (total steps
 * Provide a Histograme of total steps/day  
 
 
-```{r Histogram of the total number of steps taken each day}
 
+```r
 a_stepsdays <- aggregate(d_activity$steps, by = list(d_activity$date, d_activity$wday), FUN = sum)
 colnames(a_stepsdays) <- c("date", "day", "tsteps")
 # Central Tendency
 summary(a_stepsdays$tsteps)[3:4]
+```
 
+```
+##   Median     Mean 
+## 10765.00 10766.19
+```
+
+```r
 # Histogram of the total number of steps taken each day ##### 
 
 hist(a_stepsdays$tsteps,
@@ -58,6 +67,8 @@ hist(a_stepsdays$tsteps,
      xlab = "Total Steps/Day"
      )
 ```
+
+![](PA1_template_files/figure-html/Histogram of the total number of steps taken each day-1.png)<!-- -->
 
 
 
@@ -67,7 +78,8 @@ Following plot show daily acitivity averaged over all days (weekdays and weekend
 * Create a dataframe that averages data across dates to create averages interval data.  
 * Create an x-axis based upon elapsed minutes 1435 minutes (0-23:55).
 
-```{r Average daily activity}
+
+```r
 # Average over all days
 d_stepsByIntveral <- d_activity %>% group_by(interval) %>% summarize(avgSteps = mean(steps, na.rm = TRUE))
 # Elapsed minutes of a day (1435 minutes)
@@ -79,6 +91,8 @@ plot(d_stepsByIntveral$elapsed, d_stepsByIntveral$avgSteps, type = "l",
      ylab = "Average Steps",
      main = "Timeseries of Averages Steps Over the Day")
 ```
+
+![](PA1_template_files/figure-html/Average daily activity-1.png)<!-- -->
 
 
 ## Imputing missing values
@@ -95,13 +109,35 @@ With this approuch the median valuse of the original and imputed datasets remain
 The mean value of the imputed dataset decrease (0.7%) which likely does not impact the  
 structure of the data.
 
-```{r Imputing missing data }
+
+```r
 #Determine index of missing data
 i_missing <- which(is.na(a_stepsdays$tsteps))
 print(paste("Number of missing days:", nrow(i_missing)))
-print("List of missing dates:")
-a_stepsdays[i_missing,"date"]
+```
 
+```
+## [1] "Number of missing days: "
+```
+
+```r
+print("List of missing dates:")
+```
+
+```
+## [1] "List of missing dates:"
+```
+
+```r
+a_stepsdays[i_missing,"date"]
+```
+
+```
+## [1] "2012-10-01" "2012-10-08" "2012-11-01" "2012-11-09" "2012-11-14"
+## [6] "2012-11-30" "2012-11-04" "2012-11-10"
+```
+
+```r
 e_stepsdays <- a_stepsdays
 # Rules
 # First day is missing - use median of population
@@ -113,9 +149,21 @@ for(i in i_missing){
 
 # Imputed central tendency
 summary(e_stepsdays$tsteps)[3:4]
+```
+
+```
+##   Median     Mean 
+## 10765.00 10680.44
+```
+
+```r
 # Original date central tendency
 summary(a_stepsdays$tsteps)[3:4]
+```
 
+```
+##   Median     Mean 
+## 10765.00 10766.19
 ```
 
 
@@ -123,7 +171,8 @@ summary(a_stepsdays$tsteps)[3:4]
 * Observed differences times of day for activity appear similar between weekday and weekend.  
 * Summary data suggests the central tendency of activity is higher on the weekend.  
 
-```{r Weekday or Weekend activity patterns}
+
+```r
 d_weekdayInterval <- filter(d_activity, d_activity$wday == "weekday") %>% 
   group_by(interval) %>% summarize(avgSteps = mean(steps, na.rm = TRUE))
 d_weekdayInterval$wday <- "weekday"
@@ -132,8 +181,23 @@ d_weekendInterval <- filter(d_activity, d_activity$wday == "weekend") %>%
 d_weekendInterval$wday <- "weekend"
 
 summary(d_weekdayInterval$avgSteps)
-summary(d_weekendInterval$avgSteps)
+```
 
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   2.218  23.974  35.338  51.872 234.103
+```
+
+```r
+summary(d_weekendInterval$avgSteps)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   1.107  32.036  43.078  75.571 175.000
+```
+
+```r
 g <- ggplot() + geom_line(data = d_weekdayInterval, aes(x = interval, y = avgSteps, color = "Weekday")) +
      geom_line(data = d_weekendInterval, aes(x = interval, y = avgSteps, color = "Weekend")) + 
      facet_grid(wday ~ ., scale = "free_y") + theme_bw() +
@@ -142,6 +206,7 @@ g <- ggplot() + geom_line(data = d_weekdayInterval, aes(x = interval, y = avgSte
        subtitle = "OBS: Activity appears to increase on the weekend") + 
      theme(legend.position = "none")
 print(g)
-
 ```
+
+![](PA1_template_files/figure-html/Weekday or Weekend activity patterns-1.png)<!-- -->
 
